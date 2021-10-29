@@ -1,80 +1,89 @@
-package VersionTwo;
+package Version3;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
 
 /**
- * <h1> Game</h1>
- * <p> The game</p>
+ * <h1> Game </h1>
+ * <p> The game is created and run through here </p>
  *
  * @author Leanne
- * @since 17/10/2021
- * @version 2
+ * @version 3
+ * @since 27/10/2021
  */
 public class Game
 {
     private int gameLimit;
-    private int gamesWon;
+    private int gamesWon; // Need to use this
 
 
-
+    /**
+     * <h1> Constructor for Game</h1>
+     * <p>this constructor makes and runs the game</p>
+     */
     public Game()
     {
-        String[] statistics = new String[10];
-        Arrays.fill(statistics,"");
+        MyFormat format = new MyFormat();
+
+        format.lineBreak();
+        System.out.println("\nPontoon");
+        format.lineBreak();
+
         setGameLimit();
+        format.lineBreak();
 
-        House h1 = new House();
-        User u1 = new User();
+       for(int game =0; game < gameLimit; game++) {
+           Deck deck = new Deck();
+           deck.shuffleDeck();
+           Player p1 = new Player();
 
-        for(int game =0; game < gameLimit; game++)
-        {
-            int houseTotal = h1.drawCard();
+           Card card1 = deck.drawCard();
+           p1.addToCardTotal(card1);
+           Card card2 = deck.drawCard();
+           p1.addToCardTotal(card2);
+           Card newCard;
 
-            int card1 = u1.drawCard();
-            int card2 = u1.drawCard();
-            int newCard;
-            ArrayList<Integer> drawnCards = new ArrayList<>();
+           System.out.println("Game: " + (game + 1));
 
-            int total = calcTotal(card1,card2);
-            drawnCards.add(card1);
-            drawnCards.add(card2);
+           System.out.println("You drew " + card1.getCardValue() + " of " + card1.getSuit() + " and " + card2.getCardValue() + " of " + card2.getSuit());
 
-            System.out.println("Game: "+(game + 1));
+           while (format.getUserInput("Would you like to draw another, y/n?" , false).equalsIgnoreCase("y"))
+           {
+               newCard = deck.drawCard();
+               p1.addToCardTotal(newCard);
+               System.out.println("You drew "+ newCard.getCardValue() +" of "+newCard.getSuit());
+           }
 
-            System.out.println("You drew "+card1+" and "+card2);
+           int total = p1.getCardTotal();
+           System.out.println("Your total is :"+total);
 
-            addStatistic(card1,statistics);
-            addStatistic(card2,statistics);
+           //Now the house draws
 
-            while (u1.askQuestion("Would you like to draw another, y/n?"))
-            {
-                newCard = u1.drawCard();
+           Player house = new Player();
+           Card houseCard1 = deck.drawCard();
+           house.addToCardTotal(houseCard1);
 
-                drawnCards.add(newCard);
+           Card houseCard2 = deck.drawCard();
+           house.addToCardTotal(houseCard2);
 
-                addStatistic(newCard,statistics);
-                System.out.println("You drew "+ newCard);
-                total = calcTotal(total, newCard);
+           int houseTotal = house.getCardTotal();
 
-            }
-            System.out.println("Your total is :"+total);
 
-            displayResults(total,houseTotal,drawnCards);
+           displayResults(total, houseTotal);
+           p1.displayDrawnCards();
 
-            //Closing message
+           format.lineBreak();
+           //deck.displayDeck();
 
-            if (game == gameLimit - 1) {
-                System.out.println("Thanks for playing \n");
-            } else if (!u1.askQuestion("Do you wish to continue playing, y/n?"))
-            {
-                System.out.println("Thanks for playing \n");
-                break;
-            }
 
-        }
-        displayStatistics(gamePercentage(),statistics);
+       }
+       format.lineBreak();
+       System.out.println("The percentage of games won: "+gamePercentage());
+
+       System.out.println("GoodBye");
+
+
     }
 
     /**
@@ -90,49 +99,60 @@ public class Game
     }
 
     /**
-     * <h1> calcTotal</h1>
-     * <p>adds the two parameters together and returns the total</p>
-     * @param x  first card
-     * @param y  second card
-     * @return the sum of the parameters
-     */
-    public int calcTotal(int x, int y) {
-        return x + y;
-
-    }
-
-    /**
-     * <h1>addStatistic</h1>
-     * <p>adds the statistic together</p>
-     * @param cardValue
-     * @param statistic
-     * @return
-     */
-    public String[] addStatistic(int cardValue, String[] statistic) {
-        statistic[cardValue - 1] = statistic[cardValue - 1] + "*";
-        return statistic;
-    }
-
-    /**
      * <h1>getResult</h1>
      * <p>Gets the result of the game and returns true or false</p>
-     * @param z total
-     * @param y house total
-     * @return if z is more than y and less than 21 returns true if not returns false
+     * @param userTotal total
+     * @param houseTotal house total
+     * @return if userTotal is more than houseTotal and less than 21 returns true if not returns false
      */
-    public boolean getResult(int z, int y) {
-        //If loop to figure out if the player won or not
-        return z > y && z <= 21;
+    public boolean getResult(int userTotal, int houseTotal) {
+        return userTotal > houseTotal && userTotal <= 21;
     }
 
     /**
      * <h1>busted</h1>
      * <p>checks to see if the parameter is more then 21</p>
-     * @param z
-     * @return if the param is more then 21 return true
+     * @param userTotal - checks the users result
+     * @return if the param is more than 21 return true
      */
-    public boolean busted(int z) {
-        return z > 21;
+    public boolean busted(int userTotal) {
+        return userTotal > 21;
+    }
+
+
+
+    /**
+     * <h1> displayResults</h1>
+     * <p> takes in the players userTotal as well as the houses userTotal and the arraylist of drawn cards
+     * <br>then outputs them to the owner depending on the results of the game</p>
+     * @param userTotal the users calculated userTotal
+     * @param houseTotal the houses userTotal
+     */
+    public void displayResults(int userTotal, int houseTotal)
+    {
+        if ((getResult(userTotal, houseTotal)) || (busted(houseTotal) && userTotal<=21)) {
+            System.out.println("You have won! Congratulations!");
+            if(busted(houseTotal))
+            {
+                System.out.print("The house busted with "+houseTotal);
+
+            }
+            else
+            {
+                System.out.println("The house lost with "+houseTotal);
+            }
+            gamesWon++;
+        } else if (busted(userTotal)) {
+            System.out.println("Busted! Your cards userTotal " + userTotal + " which is over 21");
+
+        } else
+        {
+            if (userTotal == houseTotal)
+            {
+                System.out.println("Your userTotal was "+userTotal+" and the house had "+ houseTotal + "The game was a draw, so the house has won!") ;
+            }
+            System.out.println("You have lost with " + userTotal + " the house has " + houseTotal + "!");
+        }
     }
 
     /**
@@ -145,6 +165,12 @@ public class Game
         return ((100/gameLimit)*gamesWon);
     }
 
+    /**
+     * <h1>Display Statistic</h1>
+     * <p> takes in the gamePercentage and the statistics string and displays the details</p>
+     * @param gamePercentage - the percentage of games won
+     * @param statistics - the frequency of cards drawn
+     */
     public void displayStatistics(double gamePercentage, String[] statistics)
     {
         System.out.println("Number of games won: " + gamePercentage + "%");
@@ -158,22 +184,5 @@ public class Game
 
 
     }
-
-    public void displayResults(int total, int houseTotal, ArrayList<Integer> drawnCards)
-    {
-        if (getResult(total, houseTotal) && total > houseTotal) {
-            System.out.println("You have won! Congratulations!");
-            gamesWon++;
-        } else if (busted(total)) {
-            System.out.println("Busted! Your cards total " + total + " which is over 21");
-
-        } else System.out.println("You have lost with " + total + " the house has " + houseTotal + "!");
-
-        System.out.println("Cards drawn: " + drawnCards);
-
-    }
-
-
-
 
 }
